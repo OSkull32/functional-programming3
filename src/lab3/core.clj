@@ -77,7 +77,6 @@
         (rest updated-points) ;; Убираем первый элемент
         updated-points))))
 
-
 (defn- print-values [key result]
   ;; Печатает значения, отформатированные с двумя знаками после запятой, разделённые табуляцией
   (let [formatted-values (map #(format "%.2f" (key %)) result)] ;; Форматируем каждое значение
