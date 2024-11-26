@@ -28,8 +28,6 @@
 
    ["-h" "--help" "Help"]])
 
-(def points (ref []))
-
 (defn- usage [options-summary]
   (->> ["Laboratory work #3: Interpolation"
         ""
@@ -72,11 +70,13 @@
         (Point. x y))
       (throw (IllegalArgumentException.)))))
 
-(defn- request-point [max-window-size]
-  (dosync
-   (alter points conj (input "Point input (x y separated by a space)" parse-point))
-   (when (> (count @points) max-window-size)
-     (alter points #(vec (rest %))))))
+(defn- request-point [points max-window-size]
+  (let [new-point (input "Point input (x y separated by a space)" parse-point)]
+    (let [updated-points (conj points new-point)]
+      (if (> (count updated-points) max-window-size)
+        (rest updated-points) ;; Убираем первый элемент
+        updated-points))))
+
 
 (defn- print-values [key result]
   ;; Печатает значения, отформатированные с двумя знаками после запятой, разделённые табуляцией
@@ -90,11 +90,11 @@
   (print-values :x result)
   (print-values :y result))
 
-(defn- process-algorithm [algorithm-name options]
+(defn- process-algorithm [algorithm-name points options]
   ;; Обрабатывает интерполяцию для одного алгоритма
   (let [window-size (get-in algorithms [algorithm-name :window-size])]
-    (when (>= (count @points) window-size) ;; Если достаточно точек для интерполяции
-      (let [result (interpolate @points (:step options) window-size (get-in algorithms [algorithm-name :interpolate]))]
+    (when (>= (count points) window-size) ;; Если достаточно точек для интерполяции
+      (let [result (interpolate points (:step options) window-size (get-in algorithms [algorithm-name :interpolate]))]
         (print-interpolation-result algorithm-name result)))))
 
 (defn -main [& args]
@@ -102,8 +102,8 @@
     (if exit-message
       (println exit-message)
       (let [max-window-size (max-window-size (:algorithms options))]
-        (loop []
-          (request-point max-window-size) ;; Запрашиваем точку
-          (doseq [algorithm-name (:algorithms options)]
-            (process-algorithm algorithm-name options)) ;; Обрабатываем каждый алгоритм
-          (recur)))))) ;; Цикл продолжается
+        (loop [points []]
+          (let [updated-points (request-point points max-window-size)] ;; Запрашиваем точку
+            (doseq [algorithm-name (:algorithms options)]
+              (process-algorithm algorithm-name updated-points options)) ;; Обрабатываем каждый алгоритм
+            (recur updated-points))))))) ;; Цикл продолжается
