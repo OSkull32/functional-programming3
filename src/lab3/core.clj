@@ -72,10 +72,9 @@
 
 (defn- request-point [points max-window-size]
   (let [new-point (input "Point input (x y separated by a space)" parse-point)]
-    (let [updated-points (conj points new-point)]
-      (if (> (count updated-points) max-window-size)
-        (rest updated-points) ;; Убираем первый элемент
-        updated-points))))
+    (if (> (count (conj points new-point)) max-window-size)
+      (rest (conj points new-point))  ;; Убираем первый элемент
+      (conj points new-point))))
 
 (defn- print-values [key result]
   ;; Печатает значения, отформатированные с двумя знаками после запятой, разделённые табуляцией
